@@ -106,6 +106,8 @@ if ($chatgptInstalled) {
             Get-Process -Name WinStore -ErrorAction SilentlyContinue | Stop-Process -Force
             Get-Process -Name WinStore.App -ErrorAction SilentlyContinue | Stop-Process -Force
             Start-Sleep 3
+            # 刷新 msstore 源缓存（区域切换后旧缓存仍按中国区目录查询，会继续报"找不到包"）
+            winget source update msstore 2>$null | Out-Null
             winget install --id 9NT1R1C2HH7J --source msstore --accept-package-agreements --accept-source-agreements --silent
             if ($LASTEXITCODE -eq 0) {
                 Write-Ok "ChatGPT 桌面端安装完成（已切换商店区域为美国）"
