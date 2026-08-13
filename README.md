@@ -29,7 +29,7 @@
 在 **PowerShell** 里执行（右键开始菜单 → 终端 / PowerShell）：
 
 ```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; irm https://cdn.jsdelivr.net/gh/DM-beginner/xianyu-deepseek-setup-lite@main/install-win11.ps1 | iex
+Set-ExecutionPolicy Bypass -Scope Process -Force; irm https://cdn.jsdelivr.net/gh/DM-beginner/xianyu-deepseek-setup-lite@main/install-win11.ps1 -OutFile $env:TEMP\xs.ps1; & $env:TEMP\xs.ps1
 ```
 
 ## 客户操作步骤（Windows 10）
@@ -37,7 +37,7 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; irm https://cdn.jsdelivr.net/g
 同样在 PowerShell 里：
 
 ```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; irm https://cdn.jsdelivr.net/gh/DM-beginner/xianyu-deepseek-setup-lite@main/install-win10.ps1 | iex
+Set-ExecutionPolicy Bypass -Scope Process -Force; irm https://cdn.jsdelivr.net/gh/DM-beginner/xianyu-deepseek-setup-lite@main/install-win10.ps1 -OutFile $env:TEMP\xs.ps1; & $env:TEMP\xs.ps1
 ```
 
 ## 客户操作步骤（macOS）
@@ -111,7 +111,7 @@ API Key 获取：客户自行注册 [DeepSeek 开放平台](https://platform.dee
    cd ~/Downloads/xianyu-deepseek-setup-lite && python3 -m http.server 8080
    ```
 2. 开 ngrok：`ngrok http 8080`，得到 `https://xxxx.ngrok-free.app`。
-3. 客户命令：`irm https://xxxx.ngrok-free.app/install-win11.ps1 | iex`。
+3. 客户命令：`irm https://xxxx.ngrok-free.app/install-win11.ps1 -OutFile $env:TEMP\xs.ps1; & $env:TEMP\xs.ps1`。
 
 注意事项：
 - **免费版 ngrok**：域名每次重启会变、有访问确认页（浏览器/irm 可能被拦截）、有连接数限制；同一账号同时只允许 1 个在线隧道。
@@ -170,7 +170,7 @@ cloudflared tunnel run deepseek-cdn                          # 运行
 按 `Win+X` → 选择「终端」或「Windows PowerShell」，粘贴（Win11 / Win10 对应一个）：
 
 ```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; irm https://cdn.jsdelivr.net/gh/DM-beginner/xianyu-deepseek-setup-lite@main/install-win11.ps1 | iex
+Set-ExecutionPolicy Bypass -Scope Process -Force; irm https://cdn.jsdelivr.net/gh/DM-beginner/xianyu-deepseek-setup-lite@main/install-win11.ps1 -OutFile $env:TEMP\xs.ps1; & $env:TEMP\xs.ps1
 ```
 
 脚本自动：创建 `~/.codex` → 弹出 DeepSeek 菜单 → 装 ChatGPT 桌面端。菜单出现时（你或客户）：

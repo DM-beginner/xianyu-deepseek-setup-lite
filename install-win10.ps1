@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   一键配置 Codex 接入 DeepSeek 并安装 ChatGPT 桌面端（Windows 10）
 
@@ -9,8 +9,7 @@
 
 .USAGE
   推荐（远程一键，配合 jsDelivr/GitHub）：
-      Set-ExecutionPolicy Bypass -Scope Process -Force
-      irm https://cdn.jsdelivr.net/gh/DM-beginner/xianyu-deepseek-setup@main/install-win10.ps1 | iex
+      Set-ExecutionPolicy Bypass -Scope Process -Force; irm https://cdn.jsdelivr.net/gh/DM-beginner/xianyu-deepseek-setup-lite@main/install-win10.ps1 -OutFile $env:TEMP\xs.ps1; & $env:TEMP\xs.ps1
 
   本地运行：
       powershell -ExecutionPolicy Bypass -File .\install-win10.ps1
@@ -27,6 +26,10 @@
 #>
 
 $ErrorActionPreference = 'Stop'
+
+# 控制台输出 UTF-8，避免中文乱码（配合脚本 UTF-8 BOM + -OutFile 字节下载执行）
+try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch {}
+$OutputEncoding = [System.Text.Encoding]::UTF8
 
 function Write-Step { param([string]$m) Write-Host ""; Write-Host "=== $m ===" -ForegroundColor Cyan }
 function Write-Ok   { param([string]$m) Write-Host "[OK] $m" -ForegroundColor Green }
@@ -90,16 +93,33 @@ if (Test-Path "$env:LOCALAPPDATA\Programs\ChatGPT\ChatGPT.exe") { $chatgptInstal
 if ($chatgptInstalled) {
     Write-Ok "ChatGPT 桌面端已安装"
 } else {
-    Write-Host "正在从 Microsoft Store 安装 ChatGPT（文件较大，请保持网络，需几分钟）..."
-    try {
-        winget install --id 9NT1R1C2HH7J --source msstore --accept-package-agreements --accept-source-agreements --silent
+    Write-Host "正在从 Microsoft Store 安装 ChatGPT（静默安装，不显示进度，请保持网络，需几分钟）..."
+    winget install --id 9NT1R1C2HH7J --source msstore --accept-package-agreements --accept-source-agreements --silent
+    if ($LASTEXITCODE -eq 0) {
         Write-Ok "ChatGPT 桌面端安装完成"
-    } catch {
-        Write-Warn "自动安装失败：$($_.Exception.Message)"
-        Write-Warn "请手动安装（二选一）："
-        Write-Warn "  1. Microsoft Store 搜索 ChatGPT（本机将自动打开商店页面）"
-        Write-Warn "  2. 浏览器打开 https://chatgpt.com/download 下载安装（需科学上网）"
-        Start-Process "ms-windows-store://pdp/?ProductId=9NT1R1C2HH7J"
+    } else {
+        Write-Warn "首次安装失败（退出码 $LASTEXITCODE）。常见原因：ChatGPT 仅在美国区商店上架，中国区商店搜不到此应用。"
+        Write-Host "正在把商店区域切换为美国后重试（下载仍走微软 CDN，国内可达）..."
+        try {
+            New-Item -Path "HKCU:\Control Panel\International\Geo" -Force | Out-Null
+            Set-ItemProperty -Path "HKCU:\Control Panel\International\Geo" -Name Nation -Value 244 -Type DWord
+            Get-Process -Name WinStore -ErrorAction SilentlyContinue | Stop-Process -Force
+            Get-Process -Name WinStore.App -ErrorAction SilentlyContinue | Stop-Process -Force
+            Start-Sleep 3
+            winget install --id 9NT1R1C2HH7J --source msstore --accept-package-agreements --accept-source-agreements --silent
+            if ($LASTEXITCODE -eq 0) {
+                Write-Ok "ChatGPT 桌面端安装完成（已切换商店区域为美国）"
+            } else {
+                Write-Warn "切换区域后仍失败（退出码 $LASTEXITCODE）"
+                throw "ChatGPT 安装失败"
+            }
+        } catch {
+            Write-Warn "自动安装失败：$($_.Exception.Message)"
+            Write-Warn "请手动安装（二选一）："
+            Write-Warn "  1. Microsoft Store 搜索 ChatGPT（本机将自动打开商店页面，区域已切换美国）"
+            Write-Warn "  2. 浏览器打开 https://chatgpt.com/download 下载安装（需科学上网）"
+            Start-Process "ms-windows-store://pdp/?ProductId=9NT1R1C2HH7J"
+        }
     }
 }
 
