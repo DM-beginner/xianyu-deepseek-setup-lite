@@ -57,41 +57,59 @@ Write-Host "  API Key 获取地址：https://platform.deepseek.com/api_keys"
 Write-Host ""
 irm https://cdn.deepseek.com/api-docs/codex-deepseek-setup-en.ps1 | iex
 
-Write-Step "安装 ChatGPT 桌面端（Microsoft Store）"
+Write-Step "安装 ChatGPT 桌面端"
 $chatgptInstalled = $false
 if (Get-AppxPackage -Name "*ChatGPT*" -ErrorAction SilentlyContinue) { $chatgptInstalled = $true }
 if (Test-Path "$env:LOCALAPPDATA\Programs\ChatGPT\ChatGPT.exe") { $chatgptInstalled = $true }
 if ($chatgptInstalled) {
     Write-Ok "ChatGPT 桌面端已安装"
 } else {
-    Write-Host "正在从 Microsoft Store 安装 ChatGPT（静默安装，不显示进度，请保持网络，需几分钟）..."
+    # 通道1：Microsoft Store（winget），网络通就直接装
+    Write-Host "尝试 Microsoft Store 安装（winget）..."
     winget install --id 9NT1R1C2HH7J --source msstore --accept-package-agreements --accept-source-agreements
     if ($LASTEXITCODE -eq 0) {
         Write-Ok "ChatGPT 桌面端安装完成"
     } else {
-        Write-Warn "首次安装失败（退出码 $LASTEXITCODE）。常见原因：ChatGPT 仅在美国区商店上架，中国区商店搜不到此应用。"
-        Write-Host "正在把商店区域切换为美国后重试（下载仍走微软 CDN，国内可达）..."
+        # 通道2：CDN 直链安装（国内网络下商店通道常不可用；jsDelivr 实测国内直连可用）
+        Write-Warn "商店通道不可用（退出码 $LASTEXITCODE，国内网络常见）。改用 CDN 直链安装（jsDelivr，国内直连）..."
         try {
-            New-Item -Path "HKCU:\Control Panel\International\Geo" -Force | Out-Null
-            Set-ItemProperty -Path "HKCU:\Control Panel\International\Geo" -Name Nation -Value 244 -Type DWord
-            Get-Process -Name WinStore -ErrorAction SilentlyContinue | Stop-Process -Force
-            Get-Process -Name WinStore.App -ErrorAction SilentlyContinue | Stop-Process -Force
-            Start-Sleep 3
-            # 刷新 msstore 源缓存（区域切换后旧缓存仍按中国区目录查询，会继续报"找不到包"）
-            winget source update msstore 2>$null | Out-Null
-            winget install --id 9NT1R1C2HH7J --source msstore --accept-package-agreements --accept-source-agreements
-            if ($LASTEXITCODE -eq 0) {
-                Write-Ok "ChatGPT 桌面端安装完成（已切换商店区域为美国）"
-            } else {
-                Write-Warn "切换区域后仍失败（退出码 $LASTEXITCODE）"
-                throw "ChatGPT 安装失败"
+            $pkgDir = Join-Path $env:TEMP "chatgpt-pkg"
+            New-Item -ItemType Directory -Force -Path $pkgDir | Out-Null
+            $base = "https://cdn.jsdelivr.net/gh/DM-beginner/xianyu-deepseek-setup-lite@main/packages"
+            $chatgptParts = @("partaa","partab","partac","partad","partae","partaf","partag","partah")
+            $winapprtParts = @("partaa","partab")
+            Write-Host "下载安装包（约 165MB，jsDelivr CDN，需几分钟）..."
+            foreach ($p in $chatgptParts) {
+                curl.exe -fsSL -o "$pkgDir\chatgpt-$p" "$base/chatgpt-x64.$p"
             }
+            foreach ($p in $winapprtParts) {
+                curl.exe -fsSL -o "$pkgDir\winapprt-$p" "$base/winapprt.$p"
+            }
+            # 拼接
+            $fs = [System.IO.File]::Open("$pkgDir\chatgpt_x64.msix", [System.IO.FileMode]::Create)
+            foreach ($p in $chatgptParts) {
+                $b = [System.IO.File]::ReadAllBytes("$pkgDir\chatgpt-$p"); $fs.Write($b, 0, $b.Length)
+            }
+            $fs.Close()
+            $fs = [System.IO.File]::Open("$pkgDir\winapprt.msix", [System.IO.FileMode]::Create)
+            foreach ($p in $winapprtParts) {
+                $b = [System.IO.File]::ReadAllBytes("$pkgDir\winapprt-$p"); $fs.Write($b, 0, $b.Length)
+            }
+            $fs.Close()
+            # SHA256 校验（防下载损坏/篡改）
+            $sha = [System.Security.Cryptography.SHA256]::Create()
+            $h1 = ([BitConverter]::ToString($sha.ComputeHash([System.IO.File]::ReadAllBytes("$pkgDir\chatgpt_x64.msix")))).Replace('-','').ToLower()
+            $h2 = ([BitConverter]::ToString($sha.ComputeHash([System.IO.File]::ReadAllBytes("$pkgDir\winapprt.msix")))).Replace('-','').ToLower()
+            if ($h1 -ne "ddc3dc4cb5f489d8435e8b4a133c7bd6d25ed379e731e5d742d19e69b0eb747c" -or $h2 -ne "20e38aeb2a085f87fbca4c67bc2280bf4b2ef89608d52788de7c81b9dde99fb1") {
+                throw "安装包校验失败（SHA256 不匹配），请重新运行本脚本"
+            }
+            # 安装：先依赖，后主包（均微软官方签名）
+            Add-AppxPackage -Path "$pkgDir\winapprt.msix"
+            Add-AppxPackage -Path "$pkgDir\chatgpt_x64.msix"
+            Write-Ok "ChatGPT 桌面端安装完成（CDN 直链）"
         } catch {
-            Write-Warn "自动安装失败：$($_.Exception.Message)"
-            Write-Warn "请手动安装（二选一）："
-            Write-Warn "  1. Microsoft Store 搜索 ChatGPT（本机将自动打开商店页面，区域已切换美国）"
-            Write-Warn "  2. 浏览器打开 https://chatgpt.com/download 下载安装（需科学上网）"
-            Start-Process "ms-windows-store://pdp/?ProductId=9NT1R1C2HH7J"
+            Write-Warn "CDN 直链安装失败：$($_.Exception.Message)"
+            Write-Warn "请手动安装：Microsoft Store 搜索 ChatGPT，或联系商家。"
         }
     }
 }
