@@ -29,7 +29,7 @@
 在 **PowerShell** 里执行（右键开始菜单 → 终端 / PowerShell）：
 
 ```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; irm https://cdn.jsdelivr.net/gh/DM-beginner/xianyu-deepseek-setup-lite-lite@main/install-win11.ps1 | iex
+Set-ExecutionPolicy Bypass -Scope Process -Force; irm https://cdn.jsdelivr.net/gh/DM-beginner/xianyu-deepseek-setup-lite@main/install-win11.ps1 | iex
 ```
 
 ## 客户操作步骤（Windows 10）
@@ -37,7 +37,7 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; irm https://cdn.jsdelivr.net/g
 同样在 PowerShell 里：
 
 ```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; irm https://cdn.jsdelivr.net/gh/DM-beginner/xianyu-deepseek-setup-lite-lite@main/install-win10.ps1 | iex
+Set-ExecutionPolicy Bypass -Scope Process -Force; irm https://cdn.jsdelivr.net/gh/DM-beginner/xianyu-deepseek-setup-lite@main/install-win10.ps1 | iex
 ```
 
 ## 客户操作步骤（macOS）
@@ -45,7 +45,7 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; irm https://cdn.jsdelivr.net/g
 在「终端」里执行：
 
 ```bash
-bash <(curl -fsSL https://cdn.jsdelivr.net/gh/DM-beginner/xianyu-deepseek-setup-lite-lite@main/install-mac.sh)
+bash <(curl -fsSL https://cdn.jsdelivr.net/gh/DM-beginner/xianyu-deepseek-setup-lite@main/install-mac.sh)
 ```
 
 > 备选地址（jsDelivr 失效时）：把 `cdn.jsdelivr.net/gh/...` 换成 `raw.githubusercontent.com/DM-beginner/xianyu-deepseek-setup-lite/main/...`（GitHub 直链，国内部分网络访问慢）。
@@ -170,7 +170,7 @@ cloudflared tunnel run deepseek-cdn                          # 运行
 按 `Win+X` → 选择「终端」或「Windows PowerShell」，粘贴（Win11 / Win10 对应一个）：
 
 ```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; irm https://cdn.jsdelivr.net/gh/DM-beginner/xianyu-deepseek-setup-lite-lite@main/install-win11.ps1 | iex
+Set-ExecutionPolicy Bypass -Scope Process -Force; irm https://cdn.jsdelivr.net/gh/DM-beginner/xianyu-deepseek-setup-lite@main/install-win11.ps1 | iex
 ```
 
 脚本自动：创建 `~/.codex` → 弹出 DeepSeek 菜单 → 装 ChatGPT 桌面端。菜单出现时（你或客户）：
@@ -183,7 +183,7 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; irm https://cdn.jsdelivr.net/g
 打开「终端」，粘贴：
 
 ```bash
-bash <(curl -fsSL https://cdn.jsdelivr.net/gh/DM-beginner/xianyu-deepseek-setup-lite-lite@main/install-mac.sh)
+bash <(curl -fsSL https://cdn.jsdelivr.net/gh/DM-beginner/xianyu-deepseek-setup-lite@main/install-mac.sh)
 ```
 
 同样选模型 + 贴 API Key。
